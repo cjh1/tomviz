@@ -619,6 +619,35 @@ DataSource::ImageFuture* DataSource::getCopyOfImagePriorTo(Operator* op)
     QTimer::singleShot(0, [=] { emit imageFuture->finished(true); });
   }
 
+  vtkFieldData* fd = result->GetFieldData();
+
+  if (fd) {
+    vtkDataArray* tiltArray = fd->GetArray("tilt_angles");
+
+    if (tiltArray) {
+      cout << "has tilt angles" << endl;
+      for (vtkIdType i = 0; i < tiltArray->GetNumberOfTuples(); ++i) {
+        double angle = tiltArray->GetTuple1(i);
+        if (angle != 0) {
+          cout << "copy corrupt: " << angle << endl;
+        }
+      }
+    }
+  }
+
+  vtkTrivialProducer* tp = vtkTrivialProducer::SafeDownCast(
+        this->Internals->Producer->GetClientSideObject());
+  fd = tp->GetOutputDataObject(0)->GetFieldData();
+  if (fd) {
+      vtkDataArray* tiltArray = fd->GetArray("tilt_angles");
+
+      if (tiltArray) {
+        cout << "orign has tilt angles" << endl;
+      }
+  }
+
+
+
   return imageFuture;
 }
 
@@ -627,6 +656,9 @@ void DataSource::updateCache()
   DataSource::ImageFuture* future =
     qobject_cast<DataSource::ImageFuture*>(this->sender());
   this->Internals->CachedPreOpStates[future->op()] = future->result();
+
+  cout << "updateCache: " << future->result() << endl;
+  cout << this->Internals->CachedPreOpStates[future->op()] << endl;
 }
 
 void DataSource::dataModified()
@@ -800,11 +832,14 @@ void DataSource::operatorTransformModified()
 
     this->Internals->Future = this->Internals->Worker->run(
       cachedState, this->Internals->Operators.mid(
-                     0, this->Internals->Operators.indexOf(srcOp)));
+                     this->Internals->Operators.indexOf(srcOp)));
     connect(this->Internals->Future, SIGNAL(finished(bool)), this,
             SLOT(pipelineFinished(bool)));
     connect(this->Internals->Future, SIGNAL(canceled()), this,
             SLOT(pipelineCanceled()));
+
+    cout << "Signals Connected" << endl;
+
   } else {
     auto data = this->copyOriginalData();
 

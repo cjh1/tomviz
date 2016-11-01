@@ -30,6 +30,10 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QVariant>
+#include <vtkSmartPointer.h>
+#include <vtkImageData.h>
+#include <vtkDataArray.h>
+#include <vtkFieldData.h>
 
 namespace tomviz {
 
@@ -158,6 +162,26 @@ void EditOperatorDialog::getCopyOfImagePriorToFinished(bool result)
   } else {
     qWarning() << "Error occured running operators.";
   }
-  future->deleteLater();
+
+  vtkFieldData* fd = future->result()->GetFieldData();
+
+  if (fd) {
+    vtkDataArray* tiltArray = fd->GetArray("tilt_angles");
+
+    if (tiltArray) {
+      for (vtkIdType i = 0; i < tiltArray->GetNumberOfTuples(); ++i) {
+        double angle = tiltArray->GetTuple1(i);
+        if (angle != 0) {
+          cout << "corrupt: " << angle << endl;
+        }
+      }
+    }
+  }
+  connect(this, &QDialog::accepted, [=]() {
+    future->deleteLater();
+    //vtkSmartPointer<vtkImageData> data = future->result();
+    //data->FastDelete();
+    cout << "finished: " << future->result() << endl;
+  });
 }
 }

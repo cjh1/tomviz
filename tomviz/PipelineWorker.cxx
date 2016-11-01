@@ -149,7 +149,7 @@ PipelineWorker::Future* PipelineWorker::Run::start()
 
 void PipelineWorker::Run::startNextOperator()
 {
-
+  cout << "startNextOperator\n";
   if (!this->m_runnableOperators.isEmpty()) {
     this->m_running = this->m_runnableOperators.dequeue();
     connect(this->m_running, SIGNAL(complete(bool)), this,
@@ -163,6 +163,8 @@ void PipelineWorker::Run::operatorComplete(bool result)
   auto runnableOperator = qobject_cast<RunnableOperator*>(this->sender());
 
   this->m_complete.append(runnableOperator);
+
+  cout << "op finished\n";
 
   if (!result) {
     emit finished(result);
@@ -239,6 +241,7 @@ PipelineWorker::Future* PipelineWorker::run(vtkDataObject* data, Operator* op)
 PipelineWorker::Future* PipelineWorker::run(vtkDataObject* data,
                                             QList<Operator*> operators)
 {
+  cout << "PipelineWorker::run()\n";
   Run* run = new Run(data, operators);
 
   return run->start();
@@ -251,6 +254,7 @@ PipelineWorker::Future::Future(Run* run, QObject* parent)
 
 PipelineWorker::Future::~Future()
 {
+  cout << "~Future\n";
   this->m_run->deleteLater();
 }
 

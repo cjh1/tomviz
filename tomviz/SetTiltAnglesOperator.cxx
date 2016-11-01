@@ -48,6 +48,9 @@ public:
                       vtkSmartPointer<vtkDataObject> dataObject, QWidget* p)
     : EditOperatorWidget(p), Op(op)
   {
+    //vtkImageData *dataObject = vtkImageData::New();
+    //dataObject->DeepCopy(data);
+
     QMap<size_t, double> tiltAngles = this->Op->tiltAngles();
     QHBoxLayout* baseLayout = new QHBoxLayout;
     this->setLayout(baseLayout);
@@ -70,6 +73,7 @@ public:
       " in the \"Data Properties\" panel or within Python.";
 
     vtkImageData* image = vtkImageData::SafeDownCast(dataObject);
+    cout << "image: " << image << endl;
     Q_ASSERT(image);
 
     int extent[6];
@@ -143,6 +147,8 @@ public:
     this->tableWidget->setColumnCount(1);
     tablePanelLayout->addWidget(this->tableWidget);
 
+    cout << "dataObject: " << dataObject << endl;
+
     vtkFieldData* fd = dataObject->GetFieldData();
     vtkDataArray* tiltArray = nullptr;
     if (fd) {
@@ -159,6 +165,11 @@ public:
         angle = 0;
         this->previousTiltAngles[i] = 0;
       }
+
+      if (angle != 0) {
+        cout << "angle: " << angle << endl;
+      }
+
       // deliberate non-else-if.  We want to override with the previous value
       // from the operator, but we need the previousTiltAngles array set
       // correctly, so the above condition has to be separate.
@@ -180,6 +191,7 @@ public:
 
   void applyChangesToOperator() override
   {
+    cout << "applyChangesToOperator" << endl;
     if (this->tabWidget->currentIndex() == 0) {
       QMap<size_t, double> tiltAngles = this->Op->tiltAngles();
       int start = startTilt->value();
@@ -208,6 +220,9 @@ public:
       for (vtkIdType i = 0; i < this->tableWidget->rowCount(); ++i) {
         QTableWidgetItem* item = this->tableWidget->item(i, 0);
         double val = item->data(Qt::DisplayRole).toDouble();
+        if (val != 0) {
+          cout << "ERROR: "  << val << endl;
+        }
         if (val != this->previousTiltAngles[i]) {
           tiltAngles[i] = val;
         }
@@ -298,10 +313,12 @@ void SetTiltAnglesOperator::setTiltAngles(const QMap<size_t, double>& newAngles)
 {
   this->TiltAngles = newAngles;
   emit this->transformModified();
+  cout << "emit this->transformModified();\n";
 }
 
 bool SetTiltAnglesOperator::applyTransform(vtkDataObject* dataObject)
 {
+  cout << "applyTransform\n";
   vtkImageData* image = vtkImageData::SafeDownCast(dataObject);
   if (!image) {
     return false;
