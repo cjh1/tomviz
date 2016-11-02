@@ -40,8 +40,37 @@
 #include <QKeyEvent>
 #include <QMainWindow>
 #include <QMenu>
+#include <QItemDelegate>
+
 
 namespace tomviz {
+
+class OperatorRunningDelegate: public QItemDelegate {
+
+public:
+  OperatorRunningDelegate(QWidget *parent = 0) : QItemDelegate(parent) {};
+
+  void paint(QPainter *painter, const QStyleOptionViewItem &option,
+             const QModelIndex &index) const;
+
+};
+
+void OperatorRunningDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
+             const QModelIndex &index) const {
+  QItemDelegate::paint(painter, option, index);
+
+//  if (index.data().canConvert<StarRating>()) {
+//      StarRating starRating = qvariant_cast<StarRating>(index.data());
+//
+//      if (option.state & QStyle::State_Selected)
+//          painter->fillRect(option.rect, option.palette.highlight());
+//
+//      starRating.paint(painter, option.rect, option.palette,
+//                       StarRating::ReadOnly);
+//  } else {
+//  QItemDelegate::paint(painter, option, index);
+//  }
+}
 
 PipelineView::PipelineView(QWidget* p) : QTreeView(p)
 {
