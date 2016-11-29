@@ -46,8 +46,20 @@ void OperatorPropertiesPanel::setOperator(Operator* op)
       disconnect(op, SIGNAL(labelModified()), this, SLOT(updatePanel()));
     }
     if (op) {
-      // CAST TO Python operator ...
-      layout()->addWidget(new OperatorWidget(this, op));
+
+      // See if we are dealing with a Python operator
+      OperatorPython* pythonOperator = qobject_cast<OperatorPython*>(op);
+      if (pythonOperator) {
+        auto widget = new OperatorWidget(this, pythonOperator);
+        widget->setJSONDescription(pythonOperator->JSONDescription());
+        deleteLayoutContents(layout());
+        layout()->addWidget(widget);
+      }
+      else {
+        auto description = new QLabel(op->label());
+        layout()->addWidget(description);
+      }
+
       connect(op, SIGNAL(labelModified()), SLOT(updatePanel()));
     }
   }
@@ -58,6 +70,6 @@ void OperatorPropertiesPanel::setOperator(Operator* op)
 
 void OperatorPropertiesPanel::updatePanel()
 {
-  m_description->setText(m_activeOperator->label());
+  //m_description->setText(m_activeOperator->label());
 }
 }

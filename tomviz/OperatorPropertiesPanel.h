@@ -41,7 +41,6 @@ private:
   Q_DISABLE_COPY(OperatorPropertiesPanel)
 
   QPointer<Operator> m_activeOperator = nullptr;
-  QLabel* m_description = nullptr;
 };
 }
 
