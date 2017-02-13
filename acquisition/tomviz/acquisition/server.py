@@ -3,6 +3,7 @@ import inspect
 import logging
 import bottle
 import sys
+import bottle
 from bottle import run, route
 
 from tomviz import jsonrpc
@@ -15,10 +16,16 @@ port = 8080
 logger = logging.getLogger('tomviz')
 
 
-def setup_app():
-    logger.info('Loading adapter: %s', adapter)
-    # First load the chosen adapter
-    module, cls = adapter.rsplit('.', 1)
+def setup_app(source_adapter=None):
+    if source_adapter is None:
+        source_adapter = adapter
+
+    app = bottle.default_app()
+    #app.routes = []
+    #app.router = bottle.Router()
+    logger.info('Loading source_adapter: %s', source_adapter)
+    # First load the chosen source_adapter
+    module, cls = source_adapter.rsplit('.', 1)
     try:
         imported = importlib.import_module(module)
     except ImportError:
@@ -28,13 +35,13 @@ def setup_app():
     try:
         cls = getattr(imported, cls)
     except AttributeError:
-        logger.error('Unable to get constructor for: %s', adapter)
+        logger.error('Unable to get constructor for: %s', source_adapter)
         raise
 
     # Ensure that the adapter implements the interface
     bases = inspect.getmro(cls)
     if len(bases) < 2 or bases[1] != AbstractSource:
-        logger.error('Adapter %s, does not derive from %s', adapter,
+        logger.error('Adapter %s, does not derive from %s', source_adapter,
                      '.'.join([AbstractSource.__module__,
                                AbstractSource.__name__]))
         sys.exit(-1)
@@ -44,8 +51,38 @@ def setup_app():
 
     @jsonrpc.endpoint(path='/acquisition')
     @inject(source_adapter)
-    def set_tilt_angle(source_adapter, angle):
-        return source_adapter.set_tilt_angle(angle)
+    def describe(source_adapter, method):
+
+        if not hasattr(source_adapter, method):
+            raise Exception('Method %s not found.' % method)
+
+        func = getattr(source_adapter, method)
+
+        description = []
+        if hasattr(func, 'description'):
+            description = getattr(func, 'description')
+
+        return description
+
+    @jsonrpc.endpoint(path='/acquisition')
+    @inject(source_adapter)
+    def connect(source_adapter, **params):
+        return source_adapter.connect(**params)
+
+    @jsonrpc.endpoint(path='/acquisition')
+    @inject(source_adapter)
+    def disconnect(source_adapter, **params):
+        return source_adapter.disconnect(**params)
+
+    @jsonrpc.endpoint(path='/acquisition')
+    @inject(source_adapter)
+    def tilt_params(source_adapter, **params):
+        return source_adapter.tilt_params(**params)
+
+    @jsonrpc.endpoint(path='/acquisition')
+    @inject(source_adapter)
+    def acquisition_params(source_adapter, **params):
+        return source_adapter.acquisition_params(**params)
 
     def _base_url():
         return '%s://%s' % (bottle.request.urlparts.scheme,
@@ -78,6 +115,6 @@ def setup_app():
 
 
 def start(debug=True):
-    setup_app()
+    setup_app(adapter)
     logger.info('Starting HTTP server')
-    run(host='localhost', port=port, debug=debug)
+    run(host='localhost', port=port, debug=debug, reloader=True)
