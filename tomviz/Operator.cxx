@@ -23,6 +23,9 @@
 
 namespace tomviz {
 
+using pugi::xml_attribute;
+using pugi::xml_node;
+
 Operator::Operator(QObject* parentObject) : QObject(parentObject)
 {
   qRegisterMetaType<TransformResult>("TransformResult");
@@ -141,4 +144,29 @@ DataSource* Operator::childDataSource() const
 {
   return m_childDataSource;
 }
+
+
+bool Operator::serialize(pugi::xml_node& ns)
+{
+  if (hasChildDataSource()) {
+      DataSource *ds = childDataSource();
+      xml_node dsNode = ns.append_child("DataSource");
+      dsNode.append_attribute("id").set_value(
+            ds->producer()->GetGlobalIDAsString());
+      dsNode.append_attribute("original_data_source")
+             .set_value(ds->originalDataSource()->GetGlobalIDAsString());
+
+    childDataSource()->serialize(dsNode);
+  }
+}
+
+bool Operator::deserialize(const pugi::xml_node& ns)
+{
+  xml_node childNode = ns.child("DataSource");
+  if (childNode) {
+
+  }
+
+}
+
 }

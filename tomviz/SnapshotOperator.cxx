@@ -31,6 +31,10 @@
 #include <QDebug>
 
 namespace tomviz {
+
+using pugi::xml_attribute;
+using pugi::xml_node;
+
 SnapshotOperator::SnapshotOperator(DataSource* source, QObject* p)
   : Operator(p), m_dataSource(source)
 {
@@ -53,14 +57,22 @@ Operator* SnapshotOperator::clone() const
   return new SnapshotOperator(m_dataSource);
 }
 
-bool SnapshotOperator::serialize(pugi::xml_node&) const
+bool SnapshotOperator::serialize(pugi::xml_node& ns) const
 {
-  // No state to serialize yet
+  if (hasChildDataSource() && childDataSource()->persistenceState() == DataSource::PersistenceState::Saved) {
+    ns.append_attribute("update").set_value(false);
+  }
+
+
   return true;
 }
 
-bool SnapshotOperator::deserialize(const pugi::xml_node&)
+bool SnapshotOperator::deserialize(const pugi::xml_node& ns)
 {
+  xml_attribute att = ns.attribute("update");
+  if (att) {
+    m_updateCache = att.as_bool();
+  }
   // No state to serialize yet
   return true;
 }

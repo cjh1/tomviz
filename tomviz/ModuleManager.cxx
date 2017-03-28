@@ -150,7 +150,7 @@ void ModuleManager::removeAllDataSources()
   this->Internals->DataSources.clear();
 }
 
-bool ModuleManager::isChild(DataSource* source)
+bool ModuleManager::isChild(DataSource* source) const
 {
   return (this->Internals->ChildDataSources.indexOf(source) >= 0);
 }
@@ -293,7 +293,7 @@ bool ModuleManager::serialize(pugi::xml_node& ns, const QDir& saveDir,
   }
 
   // Build a list of unique original data sources. These are the data readers.
-  foreach (const QPointer<DataSource>& ds, this->Internals->DataSources) {
+  foreach (const QPointer<DataSource>& ds, this->Internals->DataSources + this->Internals->ChildDataSources) {
     if (ds == nullptr ||
         uniqueOriginalSources.contains(ds->originalDataSource()) ||
         ds->persistenceState() == DataSource::PersistenceState::Modified) {
@@ -317,8 +317,8 @@ bool ModuleManager::serialize(pugi::xml_node& ns, const QDir& saveDir,
   // Now serialize each of the data-sources. The data sources don't serialize
   // the original data source since that can be shared among sources.
   QList<DataSource*> serializedDataSources;
-  foreach (const QPointer<DataSource>& ds, this->Internals->DataSources) {
-    if (ds && uniqueOriginalSources.contains(ds->originalDataSource())) {
+  foreach (const QPointer<DataSource>& ds, this->Internals->DataSources + this->Internals->ChildDataSources) {
+    if (ds && uniqueOriginalSources.contains(ds->originalDataSource()) && ds->persistenceState() == DataSource::PersistenceState::Saved) {
       pugi::xml_node dsnode = ns.append_child("DataSource");
       dsnode.append_attribute("id").set_value(
         ds->producer()->GetGlobalIDAsString());
@@ -326,6 +326,9 @@ bool ModuleManager::serialize(pugi::xml_node& ns, const QDir& saveDir,
         .set_value(ds->originalDataSource()->GetGlobalIDAsString());
       if (ds == ActiveObjects::instance().activeDataSource()) {
         dsnode.append_attribute("active").set_value(1);
+      }
+      if (isChild(ds)) {
+        dsnode.append_attribute("child").set_value(true);
       }
       if (!ds->serialize(dsnode)) {
         qWarning("Failed to serialize DataSource.");

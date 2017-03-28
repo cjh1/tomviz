@@ -70,7 +70,7 @@ public:
   bool hasRunningOperators();
 
   /// Return whether a DataSource is a child DataSource
-  bool isChild(DataSource*);
+  bool isChild(DataSource*) const;
 
 public slots:
   void addModule(Module*);
