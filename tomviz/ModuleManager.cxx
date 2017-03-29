@@ -657,9 +657,9 @@ void ModuleManager::onPVStateLoaded(vtkPVXMLElement* vtkNotUsed(xml),
       continue;
     }
 
-    if (!child) {
+    //if (!child) {
       this->addDataSource(dataSource);
-    }
+    //}
 
     this->Internals->DataSourceIdMap[id] = dataSource;
 
