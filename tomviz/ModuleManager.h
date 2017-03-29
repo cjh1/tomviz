@@ -72,6 +72,10 @@ public:
   /// Return whether a DataSource is a child DataSource
   bool isChild(DataSource*) const;
 
+  /// Used to lookup a data source by id, used to lookup child data sources,
+  /// during the deserialization process.
+  DataSource* lookupDataSource(int id);
+
 public slots:
   void addModule(Module*);
 

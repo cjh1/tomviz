@@ -69,6 +69,7 @@ public:
   bool PipelinePaused = false;
   bool GradientOpacityVisibility = false;
   PersistenceState PersistState = PersistenceState::Saved;
+  bool Child = false;
 
   // Checks if the tilt angles data array exists on the given VTK data
   // and creates it if it does not exist.
@@ -1094,4 +1095,5 @@ DataSource::PersistenceState DataSource::persistenceState() const
 {
   return this->Internals->PersistState;
 }
+
 }

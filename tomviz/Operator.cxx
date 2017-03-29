@@ -19,7 +19,10 @@
 #include "ModuleManager.h"
 #include "OperatorResult.h"
 
+#include "vtkSMSourceProxy.h"
+
 #include <QList>
+#include <QTimer>
 
 namespace tomviz {
 
@@ -146,27 +149,32 @@ DataSource* Operator::childDataSource() const
 }
 
 
-bool Operator::serialize(pugi::xml_node& ns)
+bool Operator::serialize(pugi::xml_node& ns) const
 {
   if (hasChildDataSource()) {
       DataSource *ds = childDataSource();
-      xml_node dsNode = ns.append_child("DataSource");
-      dsNode.append_attribute("id").set_value(
+      ns.append_attribute("childDataSource").set_value(
             ds->producer()->GetGlobalIDAsString());
-      dsNode.append_attribute("original_data_source")
-             .set_value(ds->originalDataSource()->GetGlobalIDAsString());
-
-    childDataSource()->serialize(dsNode);
   }
+
+  return true;
 }
 
 bool Operator::deserialize(const pugi::xml_node& ns)
 {
-  xml_node childNode = ns.child("DataSource");
-  if (childNode) {
+  xml_attribute child = ns.attribute("childDataSource");
+  if (child) {
+    vtkTypeUInt32 id = child.as_int();
+    DataSource* child = ModuleManager::instance().lookupDataSource(id);
+    setChildDataSource(child);
+    //the operator is not added at this point so the signal is lost
+    QTimer::singleShot(0, [this, child]() {
+      emit this->newChildDataSource(child);
+    });
 
   }
 
+  return true;
 }
 
 }
