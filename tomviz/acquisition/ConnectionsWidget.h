@@ -37,6 +37,7 @@ public:
   ConnectionsWidget(QWidget* parent);
   ~ConnectionsWidget() override;
 
+  Connection selectedConnection();
 private:
   QScopedPointer<Ui::ConnectionsWidget> m_ui;
   QList<Connection> m_connections;

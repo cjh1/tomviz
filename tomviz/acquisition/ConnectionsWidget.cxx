@@ -151,4 +151,10 @@ void ConnectionsWidget::editConnection(Connection conn)
     m_ui->connectionsWidget->addItem(newConnection.name());
   }
 }
+
+Connection ConnectionsWidget::selectedConnection() {
+  auto selectedRow = m_ui->connectionsWidget->row(m_ui->connectionsWidget->currentItem());
+
+  return m_connections[selectedRow];
+}
 }
