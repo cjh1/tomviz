@@ -45,7 +45,11 @@ RegexGroupsWidget::RegexGroupsWidget(QWidget* parent)
     RegexGroupDialog dialog;
     dialog.exec();
 
-    this->m_ui->regexGroupsWidget->addItem(dialog.name());
+    if (this->m_ui->regexGroupsWidget
+          ->findItems(dialog.name(), Qt::MatchExactly)
+          .isEmpty()) {
+      this->m_ui->regexGroupsWidget->addItem(dialog.name());
+    }
 
     this->writeSettings();
   });
@@ -57,7 +61,6 @@ RegexGroupsWidget::RegexGroupsWidget(QWidget* parent)
             QMenu contextMenu;
             contextMenu.addAction("Delete", this, [this, &pos]() {
               auto item = this->m_ui->regexGroupsWidget->itemAt(pos);
-
               delete item;
               this->writeSettings();
             });
@@ -94,4 +97,14 @@ void RegexGroupsWidget::writeSettings()
   settings->endGroup();
 }
 
+QStringList RegexGroupsWidget::regexGroups()
+{
+  QStringList groups;
+  for (int i = 0; i < this->m_ui->regexGroupsWidget->count(); i++) {
+    QListWidgetItem* group = this->m_ui->regexGroupsWidget->item(i);
+    groups.append(group->text());
+  }
+
+  return groups;
+}
 }

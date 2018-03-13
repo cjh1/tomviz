@@ -17,6 +17,13 @@ set(ACQUISITION_SOURCES
   RegexGroupDialog.h
   RegexGroupsWidget.cxx
   RegexGroupsWidget.h
+  RegexGroupSubstitution.cxx
+  RegexGroupSubstitution.h
+  RegexGroupSubstitutionDialog.cxx
+  RegexGroupSubstitutionDialog.h
+  RegexGroupsSubstitutionsWidget.cxx
+  RegexGroupsSubstitutionsWidget.h
+
 )
 
 # We need this otherwise Qt will complain, not sure why!

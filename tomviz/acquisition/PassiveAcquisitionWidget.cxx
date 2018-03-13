@@ -351,12 +351,10 @@ QJsonObject PassiveAcquisitionWidget::connectParams() {
     {  "fileNameRegex", m_ui->fileNameRegexLineEdit->text() },
   };
 
-  auto fileNameRegexGroups = m_ui->fileNameRegexGroupNamesLineEdit->text();
+  auto fileNameRegexGroups = m_ui->regexGroupsWidget->regexGroups();
   if (!fileNameRegexGroups.isEmpty()) {
-    auto groupsList = fileNameRegexGroups.split( "," );
-    auto groups = QJsonArray::fromStringList(groupsList);
+    auto groups = QJsonArray::fromStringList(fileNameRegexGroups);
     connectParams["fileNameRegexGroups"] = groups;
-
   }
 
   return connectParams;

@@ -14,34 +14,35 @@
 
 ******************************************************************************/
 
-#ifndef tomvizRegexGroupsWidget_h
-#define tomvizRegexGroupsWidget_h
+#ifndef tomvizRegexGroupSubstitutionDialog_h
+#define tomvizRegexGroupSubstitutionDialog_h
 
+#include <QDialog>
 #include <QScopedPointer>
-#include <QStringList>
-#include <QWidget>
 
 namespace Ui {
-class RegexGroupsWidget;
+class RegexGroupSubstitutionDialog;
 }
 
 namespace tomviz {
 
-class RegexGroupsWidget : public QWidget
+class RegexGroupSubstitutionDialog : public QDialog
 {
   Q_OBJECT
 
 public:
-  RegexGroupsWidget(QWidget* parent);
-  ~RegexGroupsWidget() override;
+  explicit RegexGroupSubstitutionDialog(const QString groupName = "",
+                                        const QString regex = "",
+                                        const QString substitution = "",
+                                        QWidget* parent = nullptr);
+  ~RegexGroupSubstitutionDialog();
 
-  QStringList regexGroups();
+  QString groupName();
+  QString regex();
+  QString substitution();
 
 private:
-  QScopedPointer<Ui::RegexGroupsWidget> m_ui;
-
-  void readSettings();
-  void writeSettings();
+  QScopedPointer<Ui::RegexGroupSubstitutionDialog> m_ui;
 };
 }
 
