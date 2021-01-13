@@ -771,6 +771,9 @@ Variant toVariant(const QVariant& value)
       QVariantList list = value.toList();
       return toVariant(list);
     }
+    case QVariant::Map: {
+
+    }
     default:
       qCritical() << "Unsupported type";
       return Variant();
@@ -786,6 +789,57 @@ Variant toVariant(const QVariantList& list)
   }
 
   return Variant(variantList);
+}
+
+Variant toVariant(const QVariantMap& map)
+{
+  std::map<std::string, Variant> variantMap;
+
+  foreach (auto key, map.keys()) {
+    variantMap[key.toStdString()] = toVariant(map[key]);
+  }
+
+  return Variant(variantMap);
+}
+
+QVariant toQVariant(const Variant& value) {
+  switch (value.type()) {
+    case Variant::INTEGER:
+      return QVariant(value.toInteger());
+    case Variant::DOUBLE:
+      return QVariant(value.toDouble());
+    case Variant::BOOL:
+      return QVariant(value.toBool());
+    case Variant::STRING: {
+      return QVariant(QString::fromStdString(value.toString()));
+    }
+    case Variant::LIST: {
+      std::vector<Variant> list = value.toList();
+      QVariantList variantList;
+      for(auto &v: list) {
+        variantList.append(toQVariant(v));
+      }
+
+      return variantList;
+    }
+    case Variant::MAP: {
+      std::map<std::string, Variant> map = value.toMap();
+      QVariantMap variantMap;
+
+      qDebug() << "variant map";
+
+      for(const auto& kv : map) {
+        std::cout << kv.first << std::endl;
+        variantMap[QString::fromStdString(kv.first)] = toQVariant(kv.second);
+      }
+
+      return variantMap;
+    }
+    default: {
+      qCritical() << "Unsupported type";
+      return QVariant();
+    }
+  }
 }
 
 QString findPrefix(const QStringList& fileNames)

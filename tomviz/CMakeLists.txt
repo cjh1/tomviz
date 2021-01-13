@@ -44,6 +44,10 @@ set(SOURCES
   CropReaction.h
   SelectVolumeWidget.cxx
   SelectVolumeWidget.h
+  DataBroker.cxx
+  DataBroker.h
+  DataBrokerLoadReaction.cxx
+  DataBrokerLoadReaction.h
   DataExchangeFormat.cxx
   DataExchangeFormat.h
   DataPropertiesModel.cxx
@@ -567,6 +571,7 @@ install(DIRECTORY "${tomviz_SOURCE_DIR}/tomviz/python/tomviz"
 set(tomviz_python_io_modules
   __init__.py
   _internal.py
+  _databroker.py
 )
 
 file(MAKE_DIRECTORY "${tomviz_python_binary_dir}/tomviz/io")

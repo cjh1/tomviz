@@ -35,6 +35,11 @@ Variant::Variant(const vector<Variant>& l) : m_type(LIST)
   new (&m_value.listVal) vector<Variant>(l);
 }
 
+Variant::Variant(const map<string, Variant>& m) : m_type(MAP)
+{
+  new (&m_value.mapVal) map<string, Variant>(m);
+}
+
 Variant::Variant(int i) : m_type(Variant::INTEGER)
 {
   m_value.integerVal = i;
@@ -84,6 +89,11 @@ vector<Variant> Variant::toList() const
   return m_value.listVal;
 }
 
+map<string, Variant> Variant::toMap() const
+{
+  return m_value.mapVal;
+}
+
 Variant::Type Variant::type() const
 {
   return m_type;
@@ -111,6 +121,10 @@ void Variant::copy(const Variant& v)
     case LIST:
       new (&m_value.listVal) vector<Variant>(v.toList());
       break;
+    case MAP:
+      new (&m_value.mapVal) map<std::string, Variant>(v.toMap());
+      break;
+
   }
 }
 } // namespace tomviz

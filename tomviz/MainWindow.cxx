@@ -25,6 +25,8 @@
 #include "Behaviors.h"
 #include "CameraReaction.h"
 #include "Connection.h"
+#include "DataBroker.h"
+#include "DataBrokerLoadReaction.h"
 #include "DataPropertiesPanel.h"
 #include "DataTransformMenu.h"
 #include "FileFormatManager.h"
@@ -239,6 +241,8 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags flags)
   new LoadDataReaction(m_ui->actionOpen);
 
   new LoadStackReaction(m_ui->actionStack);
+
+  new DataBrokerLoadReaction(m_ui->actionImportFromDataBroker);
 
   // Build Data Transforms menu
   new DataTransformMenu(this, m_ui->menuData, m_ui->menuSegmentation);
@@ -539,6 +543,16 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags flags)
             m_ui->actionAcquisition->setEnabled(true);
             m_ui->actionPassiveAcquisition->setEnabled(true);
             registerCustomOperators(pythonWatcher->result());
+            // Check if we have DataBroker and enable menu if we do
+            DataBroker dataBroker;
+            m_ui->actionImportFromDataBroker->setEnabled(dataBroker.installed());
+
+            qDebug() << dataBroker.catalogs()[0];
+            // qDebug() << dataBroker.runs("test");
+            // qDebug() << dataBroker.runs("test")[0]["uid"];
+            // qDebug() << dataBroker.variables("test", "primary", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4");
+            // dataBroker.loadVariable("test", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4", "primary", "Andor_image");
+
             delete pythonWatcher;
             statusBar()->showMessage("Initialization complete", 1500);
           });
@@ -1091,7 +1105,7 @@ void MainWindow::findPipelineTemplates() {
   QDir created (tomviz::userDataPath() + "/templates");
 
   QList<QDir> locations = { provided, created };
-  foreach (QDir dir, locations) {  
+  foreach (QDir dir, locations) {
     foreach (QFileInfo file, dir.entryInfoList()) {
       QString menuName = file.completeBaseName().replace("_", " ");
       if (file.isFile()) {

@@ -66,13 +66,18 @@ public:
 
     void incrementRefCount();
     bool toBool() const;
+    bool isBool() const;
+    bool isString() const;
+    bool isFloat() const;
     bool isDict() const;
     bool isList() const;
     bool isTuple() const;
     bool isValid() const;
     QString toString() const;
+    double toDouble() const;
     Dict toDict();
     List toList();
+    virtual Variant toVariant();
 
     Object getAttr(const QString& name);
 
@@ -97,6 +102,7 @@ public:
     void set(int index, const Variant& value);
     Object operator[](int index);
     int length();
+    Variant toVariant() override;
   };
 
   class Dict : public Object
@@ -108,10 +114,12 @@ public:
     Dict(const Object& obj);
     Dict& operator=(const Object& other);
     Object operator[](const QString& key);
+    Object operator[](const std::string& key);
     Object operator[](const char* key);
     void set(const QString& key, const Object& value);
     void set(const QString& key, const Variant& value);
     QString toString();
+    Variant toVariant() override;
   };
 
   class List : public Object
@@ -121,6 +129,7 @@ public:
     List(const List& other);
     Object operator[](int index);
     int length();
+    Variant toVariant() override;
   };
 
   class Function : public Object

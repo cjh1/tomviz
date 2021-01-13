@@ -198,6 +198,9 @@ void deleteLayoutContents(QLayout* layout);
 
 Variant toVariant(const QVariant& value);
 Variant toVariant(const QVariantList& value);
+Variant toVariant(const QVariantMap& value);
+
+QVariant toQVariant(const Variant& value);
 
 /// Find common prefix for collection of file names
 QString findPrefix(const QStringList& fileNames);
