@@ -49,6 +49,7 @@ def tables(catalog_name, run_uid):
 def variables(catalog_name, run_uid, table):
     variables = []
 
+    print(catalog_name, run_uid, table)
     for name, variable in catalog[catalog_name][run_uid][table].read().data_vars.items():
         variables.append({
             "name": name

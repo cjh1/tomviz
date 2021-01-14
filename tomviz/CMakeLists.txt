@@ -46,6 +46,8 @@ set(SOURCES
   SelectVolumeWidget.h
   DataBroker.cxx
   DataBroker.h
+  DataBrokerLoadDialog.cxx
+  DataBrokerLoadDialog.h
   DataBrokerLoadReaction.cxx
   DataBrokerLoadReaction.h
   DataExchangeFormat.cxx

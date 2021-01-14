@@ -2,9 +2,12 @@
    It is released under the 3-Clause BSD License, see "LICENSE". */
 
 #include "DataBrokerLoadReaction.h"
-#include "LoadDataReaction.h"
+#include "DataBrokerLoadDialog.h"
+
 
 #include "DataSource.h"
+#include "Utilities.h"
+
 #include <vtkImageData.h>
 
 namespace tomviz {
@@ -23,6 +26,10 @@ void DataBrokerLoadReaction::onTriggered()
 
 void DataBrokerLoadReaction::loadData()
 {
+  auto dataBroker = new DataBroker(tomviz::mainWidget());
+  auto dialog = new DataBrokerLoadDialog(dataBroker, tomviz::mainWidget());
+  dialog->exec();
+  /*
   auto dataBroker = new DataBroker();
   auto call = dataBroker->loadVariable("test", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4", "primary", "Andor_image");
   connect(call, &LoadDataCall::complete, dataBroker, [dataBroker](vtkSmartPointer<vtkImageData> imageData) {
@@ -31,7 +38,7 @@ void DataBrokerLoadReaction::loadData()
     LoadDataReaction::dataSourceAdded(dataSource, true, false);
     dataBroker->deleteLater();
   });
-
+  */
 }
 
 }

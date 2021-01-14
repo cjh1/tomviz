@@ -565,11 +565,11 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags flags)
             //   call->deleteLater();
             // });
 
-            auto call = dataBroker->variables("test", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4", "primary");
-            connect(call, &ListResourceCall::complete, this, [call](QList<QVariantMap> cats) {
-              qDebug() << cats[0]["name"];
-              call->deleteLater();
-            });
+            // auto call = dataBroker->variables("test", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4", "primary");
+            // connect(call, &ListResourceCall::complete, this, [call](QList<QVariantMap> cats) {
+            //   qDebug() << cats[0]["name"];
+            //   call->deleteLater();
+            // });
 
 
             //qDebug() << [0];
