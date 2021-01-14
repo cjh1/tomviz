@@ -830,12 +830,14 @@ QVariant toQVariant(const Variant& value) {
 
       for(const auto& kv : map) {
         std::cout << kv.first << std::endl;
+        std::cout << kv.second.type() << std::endl;
         variantMap[QString::fromStdString(kv.first)] = toQVariant(kv.second);
       }
 
       return variantMap;
     }
     default: {
+      qDebug() << value.type();
       qCritical() << "Unsupported type";
       return QVariant();
     }

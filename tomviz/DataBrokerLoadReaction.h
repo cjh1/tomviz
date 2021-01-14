@@ -23,7 +23,7 @@ public:
   DataBrokerLoadReaction(QAction* parentAction);
   ~DataBrokerLoadReaction() override;
 
-  static DataSource* loadData();
+  static void loadData();
 
 protected:
   /// Called when the action is triggered.

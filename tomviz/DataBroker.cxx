@@ -9,12 +9,16 @@
 #include <vtkImageData.h>
 
 #include <QDebug>
+#include <QtConcurrent>
 
 namespace tomviz {
 
 
-DataBroker::DataBroker()
+DataBroker::DataBroker(QObject* parent) : QObject(parent)
 {
+  qRegisterMetaType<vtkSmartPointer<vtkImageData>>();
+  qRegisterMetaType<QList<QVariantMap>>();
+
   Python python;
   m_dataBrokerModule = python.import("tomviz.io._databroker");
   if (!m_dataBrokerModule.isValid()) {
@@ -41,146 +45,191 @@ bool DataBroker::installed() {
   return res.toBool();
 }
 
-QStringList DataBroker::catalogs() {
-  QStringList catalogs;
-  Python python;
+ListResourceCall* DataBroker::catalogs() {
+  auto call = new ListResourceCall(this);
 
-  auto catalogsFunc = m_dataBrokerModule.findFunction("catalogs");
-  if (!catalogsFunc.isValid()) {
-    qCritical() << "Failed to import tomviz.io._databroker.catalogs";
-    return catalogs;
-  }
+  auto future = QtConcurrent::run([this, call]() {
+    Python python;
 
-  auto res = catalogsFunc.call();
+    auto catalogsFunc = m_dataBrokerModule.findFunction("catalogs");
+    if (!catalogsFunc.isValid()) {
+      emit call->error("Failed to import tomviz.io._databroker.catalogs");
+      return;
+    }
+    auto res = catalogsFunc.call();
 
-   if (!res.isValid()) {
-    qCritical("Error calling catalogs");
-    return catalogs;
-  }
+    if (!res.isValid()) {
+      emit call->error("Error calling catalogs");
+      return;
+    }
 
-  auto pyList = res.toList();
+    QList<QVariantMap> catalogs;
 
-  if (!pyList.isValid()) {
-    qCritical() << "Error calling toList";
-    return catalogs;
-  }
+    for(auto v: toQVariant(res.toVariant()).toList()) {
+      catalogs.append(v.toMap());
+    }
 
-  for (auto i = 0; i < pyList.length(); i++) {
-    catalogs.append(pyList[i].toString());
-  }
+    emit call->complete(catalogs);
+  });
 
-  return catalogs;
+  return call;
 }
 
-QList<QVariantMap> DataBroker::runs(const QString &catalog) {
-  Python python;
+ListResourceCall* DataBroker::runs(const QString &catalog) {
+  auto call = new ListResourceCall(this);
 
-  auto runsFunc = m_dataBrokerModule.findFunction("runs");
-  if (!runsFunc.isValid()) {
-    qCritical() << "Failed to import tomviz.io._databroker.runs";
-    return QList<QVariantMap>();
-  }
+  auto future = QtConcurrent::run([this, call, catalog]() {
+    Python python;
 
-  Python::Tuple args(1);
-  args.set(0, catalog.toStdString());
+    auto runsFunc = m_dataBrokerModule.findFunction("runs");
+    if (!runsFunc.isValid()) {
+      emit call->error("Failed to import tomviz.io._databroker.runs");
+      return;
+    }
 
-  auto res = runsFunc.call(args);
+    Python::Tuple args(1);
+    qDebug() << catalog;
+    args.set(0, catalog.toStdString());
 
-   if (!res.isValid()) {
-    qCritical("Error calling runs");
-    return QList<QVariantMap>();
-  }
+    auto res = runsFunc.call(args);
 
-  QList<QVariantMap> runs;
+    if (!res.isValid()) {
+      emit call->error("Error calling runs");
+      return;
+    }
 
-  for(auto v: toQVariant(res.toVariant()).toList()) {
-    runs.append(v.toMap());
-  }
+    QList<QVariantMap> runs;
 
+    for(auto v: toQVariant(res.toVariant()).toList()) {
+      runs.append(v.toMap());
+    }
 
-  return runs;
+    emit call->complete(runs);
+  });
+
+  return call;
 }
 
-QStringList DataBroker::variables(const QString &catalog, const QString &table, const QString &runUid)
+ListResourceCall* DataBroker::tables(const QString &catalog, const QString &runUid) {
+  auto call = new ListResourceCall(this);
+
+  auto future = QtConcurrent::run([this, call, catalog, runUid]() {
+    Python python;
+
+    auto tablesFunc = m_dataBrokerModule.findFunction("tables");
+    if (!tablesFunc.isValid()) {
+      emit call->error("Failed to import tomviz.io._databroker.tables");
+      return;
+    }
+
+    Python::Tuple args(2);
+    args.set(0, catalog.toStdString());
+    args.set(1, runUid.toStdString());
+
+    auto res = tablesFunc.call(args);
+
+    if (!res.isValid()) {
+      emit call->error("Error calling tables");
+      return;
+    }
+
+    QList<QVariantMap> tables;
+
+    for(auto v: toQVariant(res.toVariant()).toList()) {
+      tables.append(v.toMap());
+    }
+
+    emit call->complete(tables);
+  });
+
+  return call;
+}
+
+
+ListResourceCall* DataBroker::variables(const QString &catalog,
+                                        const QString &runUid,
+                                        const QString &table)
 {
-  Python python;
+  auto call = new ListResourceCall(this);
 
-  QStringList variables;
-  auto variablesFunc = m_dataBrokerModule.findFunction("variables");
-  if (!variablesFunc.isValid()) {
-    qCritical() << "Failed to import tomviz.io._databroker.variables";
-    return variables;
-  }
-
-  Python::Tuple args(3);
-  args.set(0, catalog.toStdString());
-  args.set(1, table.toStdString());
-  args.set(2, runUid.toStdString());
-
-  std::cout << "calling\n";
-  auto res = variablesFunc.call(args);
+  auto future = QtConcurrent::run([this, call, catalog, runUid, table]() {
+    Python python;
 
 
-  if (!res.isValid()) {
-    qCritical("Error calling variables");
-    return variables;
-  }
+    auto variablesFunc = m_dataBrokerModule.findFunction("variables");
+    if (!variablesFunc.isValid()) {
+      emit call->error("Failed to import tomviz.io._databroker.variables");
+      return;
+    }
 
+    Python::Tuple args(3);
+    args.set(0, catalog.toStdString());
+    args.set(1, runUid.toStdString());
+    args.set(2, table.toStdString());
 
-  std::cout << "called\n";
+    auto res = variablesFunc.call(args);
+    if (!res.isValid()) {
+      emit call->error("Error calling variables");
+      return;
+    }
 
-  auto pyList = res.toList();
+    QList<QVariantMap> variables;
+    for(auto v: toQVariant(res.toVariant()).toList()) {
+      variables.append(v.toMap());
+    }
 
+    emit call->complete(variables);
+  });
 
-  std::cout << "list\n";
-  for (auto i = 0; i < pyList.length(); i++) {
-    variables.append(pyList[i].toString());
-  }
-
-  return variables;
+  return call;
 }
 
-vtkSmartPointer<vtkImageData> DataBroker::loadVariable(const QString &catalog,  const QString &runUid, const QString &table, const QString &variable)
+LoadDataCall* DataBroker::loadVariable(const QString &catalog,
+                                       const QString &runUid,
+                                       const QString &table,
+                                       const QString &variable)
 {
-  Python python;
+  auto call = new LoadDataCall(this);
 
-  auto loadFunc = m_dataBrokerModule.findFunction("load_variable");
-  if (!loadFunc.isValid()) {
-    qCritical() << "Failed to import tomviz.io._databroker.load_variable";
-    return nullptr;
-  }
+  auto future = QtConcurrent::run([this, catalog, runUid, table, variable, call]() {
+    Python python;
 
-  Python::Tuple args(4);
-  args.set(0, catalog.toStdString());
-  args.set(1, runUid.toStdString());
-  args.set(2, table.toStdString());
-  args.set(3, variable.toStdString());
+    auto loadFunc = m_dataBrokerModule.findFunction("load_variable");
+    if (!loadFunc.isValid()) {
+      emit call->error("Failed to import tomviz.io._databroker.load_variable");
+    }
 
-  auto res = loadFunc.call(args);
+    Python::Tuple args(4);
+    args.set(0, catalog.toStdString());
+    args.set(1, runUid.toStdString());
+    args.set(2, table.toStdString());
+    args.set(3, variable.toStdString());
 
-  if (!res.isValid()) {
-    qCritical("Error calling load_variable");
-    return nullptr;
-  }
+    auto res = loadFunc.call(args);
 
-  vtkObjectBase* vtkobject =
-    Python::VTK::GetPointerFromObject(res, "vtkImageData");
-  if (vtkobject == nullptr) {
-    return nullptr;
-  }
+    if (!res.isValid()) {
+      emit call->error("Error calling load_variable");
+      return;
+    }
 
-  vtkSmartPointer<vtkImageData> imageData =
-    vtkImageData::SafeDownCast(vtkobject);
+    vtkObjectBase* vtkobject =
+      Python::VTK::GetPointerFromObject(res, "vtkImageData");
+    if (vtkobject == nullptr) {
+      emit call->error("Error converting to vtkImageData");
+      return;
+    }
 
-  if (imageData->GetNumberOfPoints() <= 1) {
-    qCritical() << "The file didn't contain any suitable data";
-    return nullptr;
-  }
+    vtkSmartPointer<vtkImageData> imageData =
+      vtkImageData::SafeDownCast(vtkobject);
 
-  return imageData;
+    if (imageData->GetNumberOfPoints() <= 1) {
+      emit call->error("The file didn't contain any suitable data");
+    }
 
+    emit call->complete(imageData);
+  });
 
-
+  return call;
 }
 
 }

@@ -16,21 +16,45 @@ def installed():
     return _installed
 
 def catalogs():
-    return list(catalog)
+    cats = []
+    for name, cat in catalog.items():
+        cats.append({
+            "name": name,
+            "description": cat.describe()['description']
+        })
+
+    return cats
 
 def runs(catalog_name):
     runs = []
+    print('test')
     for uid, run in catalog[catalog_name].items():
         runs.append({
             "uid": uid,
             "name": run.name,
-            "time": run.metadata['start']['time']
+            "time": run.updated
         })
 
     return runs
 
-def variables(catalog_name, table, run_uid):
-    return list(catalog[catalog_name][run_uid][table].read().data_vars.keys())
+def tables(catalog_name, run_uid):
+    tables = []
+    for name, _ in catalog[catalog_name][run_uid].items():
+        tables.append({
+            "name": name,
+        })
+
+    return tables
+
+def variables(catalog_name, run_uid, table):
+    variables = []
+
+    for name, variable in catalog[catalog_name][run_uid][table].read().data_vars.items():
+        variables.append({
+            "name": name
+        })
+
+    return variables
 
 def load_variable(catalog_name, run_uid, table, variable):
     data = catalog[catalog_name][run_uid][table].read()[variable].data

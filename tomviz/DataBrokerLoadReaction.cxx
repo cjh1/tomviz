@@ -21,14 +21,17 @@ void DataBrokerLoadReaction::onTriggered()
   loadData();
 }
 
-DataSource* DataBrokerLoadReaction::loadData()
+void DataBrokerLoadReaction::loadData()
 {
-  DataBroker dataBroker;
-  auto imageData = dataBroker.loadVariable("test", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4", "primary", "Andor_image");
-  auto dataSource = new DataSource(imageData);
-  LoadDataReaction::dataSourceAdded(dataSource, true, false);
+  auto dataBroker = new DataBroker();
+  auto call = dataBroker->loadVariable("test", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4", "primary", "Andor_image");
+  connect(call, &LoadDataCall::complete, dataBroker, [dataBroker](vtkSmartPointer<vtkImageData> imageData) {
+    auto dataSource = new DataSource(imageData);
+    dataSource->setLabel("db://test/1b0b4d73/primary/Andor_image");
+    LoadDataReaction::dataSourceAdded(dataSource, true, false);
+    dataBroker->deleteLater();
+  });
 
-  return dataSource;
 }
 
 }

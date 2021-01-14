@@ -544,10 +544,35 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags flags)
             m_ui->actionPassiveAcquisition->setEnabled(true);
             registerCustomOperators(pythonWatcher->result());
             // Check if we have DataBroker and enable menu if we do
-            DataBroker dataBroker;
-            m_ui->actionImportFromDataBroker->setEnabled(dataBroker.installed());
+            auto dataBroker  = new DataBroker(this);
+            m_ui->actionImportFromDataBroker->setEnabled(dataBroker->installed());
 
-            qDebug() << dataBroker.catalogs()[0];
+            // auto call = dataBroker->catalogs();
+            // connect(call, &ListResourceCall::complete, this, [call](QList<QVariantMap> cats) {
+            //   qDebug() << cats[0]["name"];
+            //   call->deleteLater();
+            // });
+
+            // auto call = dataBroker->runs("test");
+            // connect(call, &ListResourceCall::complete, this, [call](QList<QVariantMap> cats) {
+            //   qDebug() << cats[0]["uid"];
+            //   call->deleteLater();
+            // });
+
+            // auto call = dataBroker->tables("test", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4");
+            // connect(call, &ListResourceCall::complete, this, [call](QList<QVariantMap> cats) {
+            //   qDebug() << cats[0]["name"];
+            //   call->deleteLater();
+            // });
+
+            auto call = dataBroker->variables("test", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4", "primary");
+            connect(call, &ListResourceCall::complete, this, [call](QList<QVariantMap> cats) {
+              qDebug() << cats[0]["name"];
+              call->deleteLater();
+            });
+
+
+            //qDebug() << [0];
             // qDebug() << dataBroker.runs("test");
             // qDebug() << dataBroker.runs("test")[0]["uid"];
             // qDebug() << dataBroker.variables("test", "primary", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4");
