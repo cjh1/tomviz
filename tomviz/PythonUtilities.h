@@ -68,6 +68,7 @@ public:
     bool toBool() const;
     bool isBool() const;
     bool isString() const;
+    bool isInt() const;
     bool isFloat() const;
     bool isDict() const;
     bool isList() const;
@@ -75,6 +76,7 @@ public:
     bool isValid() const;
     QString toString() const;
     double toDouble() const;
+    long toLong() const;
     Dict toDict();
     List toList();
     virtual Variant toVariant();

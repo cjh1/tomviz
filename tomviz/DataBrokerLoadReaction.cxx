@@ -42,7 +42,7 @@ void DataBrokerLoadReaction::loadData()
     auto call = dataBroker->loadVariable(catalog, runUid, table, variable);
     connect(call, &LoadDataCall::complete, dataBroker, [dataBroker, catalog, runUid, table, variable](vtkSmartPointer<vtkImageData> imageData) {
       auto dataSource = new DataSource(imageData);
-      dataSource->setLabel(QString("db://%1/%2/%3/%4").arg(catalog).arg(runUid).arg(table).arg(variable));
+      dataSource->setLabel(QString("db:///%1/%2/%3/%4").arg(catalog).arg(runUid).arg(table).arg(variable));
       LoadDataReaction::dataSourceAdded(dataSource, true, false);
       dataBroker->deleteLater();
       tomviz::mainWidget()->unsetCursor();

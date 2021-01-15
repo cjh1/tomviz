@@ -99,6 +99,11 @@ bool Python::Object::isString() const
   return PyString_Check(m_smartPyObject->GetPointer());
 }
 
+bool Python::Object::isInt() const
+{
+  return PyLong_Check(m_smartPyObject->GetPointer());
+}
+
 bool Python::Object::isFloat() const
 {
   return PyFloat_Check(m_smartPyObject->GetPointer());
@@ -147,6 +152,11 @@ QString Python::Object::toString() const
   return QString(cdata ? cdata : "");
 }
 
+long Python::Object::toLong() const
+{
+  return PyLong_AsLong(m_smartPyObject->GetPointer());
+}
+
 double Python::Object::toDouble() const
 {
   return PyFloat_AsDouble(m_smartPyObject->GetPointer());
@@ -167,6 +177,9 @@ Variant Python::Object::toVariant() {
   }
   else if (isFloat()) {
     return Variant(toDouble());
+  }
+  else if (isInt()) {
+    return Variant(toLong());
   }
   else {
     Logger::critical("Unsupported type.");

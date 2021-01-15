@@ -45,6 +45,11 @@ Variant::Variant(int i) : m_type(Variant::INTEGER)
   m_value.integerVal = i;
 }
 
+Variant::Variant(long l) : m_type(Variant::LONG)
+{
+  m_value.longVal = l;
+}
+
 Variant::Variant(double d) : m_type(Variant::DOUBLE)
 {
   m_value.doubleVal = d;
@@ -72,6 +77,11 @@ bool Variant::toBool() const
 int Variant::toInteger() const
 {
   return m_value.integerVal;
+}
+
+long Variant::toLong() const
+{
+  return m_value.longVal;
 }
 
 double Variant::toDouble() const
@@ -108,6 +118,9 @@ void Variant::copy(const Variant& v)
       break;
     case INTEGER:
       m_value.integerVal = v.toInteger();
+      break;
+    case LONG:
+      m_value.longVal = v.toLong();
       break;
     case DOUBLE:
       m_value.doubleVal = v.toDouble();

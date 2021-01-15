@@ -19,6 +19,7 @@ public:
   {
     INVALID,
     INTEGER,
+    LONG,
     DOUBLE,
     BOOL,
     STRING,
@@ -30,6 +31,7 @@ public:
   Variant(const std::string& str);
   Variant(const std::vector<Variant>& l);
   Variant(int i);
+  Variant(long l);
   Variant(double d);
   Variant(bool b);
   Variant(const Variant& v);
@@ -40,6 +42,7 @@ public:
 
   bool toBool() const;
   int toInteger() const;
+  long toLong() const;
   double toDouble() const;
   std::string toString() const;
   std::vector<Variant> toList() const;
@@ -51,6 +54,7 @@ private:
   union VariantUnion
   {
     int integerVal;
+    long longVal;
     double doubleVal;
     bool boolVal;
     std::string stringVal;

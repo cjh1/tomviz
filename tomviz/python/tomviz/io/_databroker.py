@@ -23,17 +23,20 @@ def catalogs():
             "description": cat.describe()['description']
         })
 
+    cats = sorted(cats, key = lambda c: c['name'])
+
     return cats
 
 def runs(catalog_name):
     runs = []
-    print('test')
     for uid, run in catalog[catalog_name].items():
         runs.append({
             "uid": uid,
             "name": run.name,
             "time": run.updated
         })
+
+    runs = sorted(runs, key = lambda r: r['name'])
 
     return runs
 
@@ -44,16 +47,26 @@ def tables(catalog_name, run_uid):
             "name": name,
         })
 
+    tables = sorted(tables, key = lambda t: t['name'])
+
     return tables
 
 def variables(catalog_name, run_uid, table):
     variables = []
 
-    print(catalog_name, run_uid, table)
-    for name, variable in catalog[catalog_name][run_uid][table].read().data_vars.items():
-        variables.append({
-            "name": name
-        })
+    # Would be nice to use context manager here, but it doesn't seem to close
+    # the dataset.
+    dataset = catalog[catalog_name][run_uid][table].read()
+    try:
+        for name, variable in dataset.data_vars.items():
+            variables.append({
+                "name": name,
+                "size": variable.data.nbytes
+            })
+    finally:
+        dataset.close()
+
+    variables = sorted(variables, key = lambda v: v['name'])
 
     return variables
 

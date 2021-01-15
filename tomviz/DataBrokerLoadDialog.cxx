@@ -3,6 +3,7 @@
 
 #include "DataBrokerLoadDialog.h"
 #include "DataBroker.h"
+#include "Utilities.h"
 
 #include "ui_DataBrokerLoadDialog.h"
 
@@ -10,6 +11,7 @@
 #include <QTreeWidget>
 #include <QDebug>
 #include <QPushButton>
+#include <QDateTime>
 
 namespace tomviz {
 
@@ -17,7 +19,9 @@ DataBrokerLoadDialog::DataBrokerLoadDialog(DataBroker* dataBroker, QWidget* pare
   : QDialog(parent), m_ui(new Ui::DataBrokerLoadDialog), m_dataBroker(dataBroker)
 {
   m_ui->setupUi(this);
-  m_ui->treeWidget->setExpandsOnDoubleClick(false);
+  auto tree = m_ui->treeWidget;
+  tree->setExpandsOnDoubleClick(false);
+  tree->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
   auto resetButton = m_ui->buttonBox->button(QDialogButtonBox::Reset);
   connect(resetButton, &QPushButton::clicked, this, [this](){
@@ -54,6 +58,7 @@ void DataBrokerLoadDialog::showCatalogs() {
   disconnect(tree, &QTreeWidget::itemDoubleClicked, nullptr, nullptr);
 
   connect(tree, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item, int column) {
+    Q_UNUSED(column);
     m_selectedCatalog = item->data(0, Qt::DisplayRole).toString();
     this->loadRuns(m_selectedCatalog);
   });
@@ -96,6 +101,7 @@ void DataBrokerLoadDialog::showRuns() {
   disconnect(tree, &QTreeWidget::itemDoubleClicked, nullptr, nullptr);
 
   connect(tree, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item, int column) {
+    Q_UNUSED(column);
     m_selectedRunUid = item->data(0, Qt::DisplayRole).toString();
     this->loadTables(m_selectedCatalog, m_selectedRunUid);
   });
@@ -113,7 +119,12 @@ void DataBrokerLoadDialog::showRuns() {
       QStringList row;
       row.append(run["uid"].toString());
       row.append(run["name"].toString());
-      row.append(run["time"].toString());
+
+      auto seconds = run["time"].toDouble();
+      auto mseconds = seconds * 1000;
+      auto dateTime = QDateTime::fromMSecsSinceEpoch(mseconds);
+      row.append(dateTime.toString(Qt::TextDate));
+
       items.append(new QTreeWidgetItem(tree, row));
   }
   tree->insertTopLevelItems(0, items);
@@ -140,6 +151,7 @@ void DataBrokerLoadDialog::showTables() {
   disconnect(tree, &QTreeWidget::itemDoubleClicked, nullptr, nullptr);
 
   connect(tree, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item, int column) {
+    Q_UNUSED(column);
     m_selectedTable = item->data(0, Qt::DisplayRole).toString();
     this->loadVariables(m_selectedCatalog, m_selectedRunUid, m_selectedTable);
   });
@@ -180,21 +192,29 @@ void DataBrokerLoadDialog::showVariables() {
   tree->clear();
   disconnect(tree, &QTreeWidget::itemDoubleClicked, nullptr, nullptr);
 
-  connect(tree, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item, int column) {
+  connect(tree, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem *item, int column) {
+    Q_UNUSED(column);
     m_selectedVariable = item->data(0, Qt::DisplayRole).toString();
     setEnabledOkButton(true);
   });
 
-  tree->setColumnCount(1);
+  connect(tree, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item, int column) {
+    Q_UNUSED(column);
+    m_selectedVariable = item->data(0, Qt::DisplayRole).toString();
+    this->accept();
+  });
 
-  QStringList headers;
-  headers.append("Name");
+  tree->setColumnCount(2);
+
+  QStringList headers = {"Name", "Size"};
   tree->setHeaderLabels(headers);
 
   QList<QTreeWidgetItem *> items;
   for(auto &v: m_variables) {
-      QStringList row;
-      row.append(v["name"].toString());
+      QStringList row = {
+        v["name"].toString(),
+        getSizeNearestThousand(v["size"].toLongLong())
+      };
       items.append(new QTreeWidgetItem(tree, row));
   }
   tree->insertTopLevelItems(0, items);

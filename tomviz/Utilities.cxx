@@ -806,6 +806,8 @@ QVariant toQVariant(const Variant& value) {
   switch (value.type()) {
     case Variant::INTEGER:
       return QVariant(value.toInteger());
+    case Variant::LONG:
+      return QVariant((qlonglong)value.toLong());
     case Variant::DOUBLE:
       return QVariant(value.toDouble());
     case Variant::BOOL:
@@ -829,8 +831,6 @@ QVariant toQVariant(const Variant& value) {
       qDebug() << "variant map";
 
       for(const auto& kv : map) {
-        std::cout << kv.first << std::endl;
-        std::cout << kv.second.type() << std::endl;
         variantMap[QString::fromStdString(kv.first)] = toQVariant(kv.second);
       }
 
