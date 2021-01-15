@@ -59,7 +59,7 @@ ListResourceCall* DataBroker::catalogs() {
     auto res = catalogsFunc.call();
 
     if (!res.isValid()) {
-      emit call->error("Error calling catalogs");
+      emit call->error("Error fetching catalogs");
       return;
     }
 
@@ -94,7 +94,7 @@ ListResourceCall* DataBroker::runs(const QString &catalog) {
     auto res = runsFunc.call(args);
 
     if (!res.isValid()) {
-      emit call->error("Error calling runs");
+      emit call->error("Error fetching runs");
       return;
     }
 
@@ -129,7 +129,7 @@ ListResourceCall* DataBroker::tables(const QString &catalog, const QString &runU
     auto res = tablesFunc.call(args);
 
     if (!res.isValid()) {
-      emit call->error("Error calling tables");
+      emit call->error("Error fetching tables");
       return;
     }
 
@@ -169,7 +169,7 @@ ListResourceCall* DataBroker::variables(const QString &catalog,
 
     auto res = variablesFunc.call(args);
     if (!res.isValid()) {
-      emit call->error("Error calling variables");
+      emit call->error("Error fetching variables");
       return;
     }
 

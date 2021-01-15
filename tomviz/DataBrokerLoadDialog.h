@@ -19,6 +19,7 @@ class QTreeWidgetItem;
 namespace tomviz {
 
 class DataBroker;
+class ListResourceCall;
 
 class DataBrokerLoadDialog : public QDialog
 {
@@ -27,6 +28,11 @@ class DataBrokerLoadDialog : public QDialog
 public:
   explicit DataBrokerLoadDialog(DataBroker* dataBroker, QWidget* parent = nullptr);
   ~DataBrokerLoadDialog() override;
+
+  QString selectedCatalog();
+  QString selectedRunUid();
+  QString selectedTable();
+  QString selectedVariable();
 
 private:
   Q_DISABLE_COPY(DataBrokerLoadDialog)
@@ -51,6 +57,14 @@ private:
   void showRuns();
   void showTables();
   void showVariables();
+  void setLabel(const QString& label);
+  void setEnabledResetButton(bool enable);
+  void setEnabledOkButton(bool enable);
+  void beginCall();
+  void endCall();
+  void setErrorMessage(const QString& errorMessage);
+  void clearErrorMessage();
+  void connectErrorSignal(ListResourceCall *call);
 };
 } // namespace tomviz
 

@@ -7,8 +7,11 @@
 
 #include "DataSource.h"
 #include "Utilities.h"
+#include "LoadDataReaction.h"
 
 #include <vtkImageData.h>
+
+#include <QMessageBox>
 
 namespace tomviz {
 
@@ -27,18 +30,33 @@ void DataBrokerLoadReaction::onTriggered()
 void DataBrokerLoadReaction::loadData()
 {
   auto dataBroker = new DataBroker(tomviz::mainWidget());
-  auto dialog = new DataBrokerLoadDialog(dataBroker, tomviz::mainWidget());
-  dialog->exec();
-  /*
-  auto dataBroker = new DataBroker();
-  auto call = dataBroker->loadVariable("test", "1b0b4d73-6d87-43ab-8d62-ed035c51b9b4", "primary", "Andor_image");
-  connect(call, &LoadDataCall::complete, dataBroker, [dataBroker](vtkSmartPointer<vtkImageData> imageData) {
-    auto dataSource = new DataSource(imageData);
-    dataSource->setLabel("db://test/1b0b4d73/primary/Andor_image");
-    LoadDataReaction::dataSourceAdded(dataSource, true, false);
-    dataBroker->deleteLater();
-  });
-  */
+  DataBrokerLoadDialog dialog(dataBroker, tomviz::mainWidget());
+
+  if (dialog.exec() == QDialog::Accepted) {
+    auto catalog = dialog.selectedCatalog();
+    auto runUid = dialog.selectedRunUid();
+    auto table = dialog.selectedTable();
+    auto variable = dialog.selectedVariable();
+
+    tomviz::mainWidget()->setCursor(Qt::WaitCursor);
+    auto call = dataBroker->loadVariable(catalog, runUid, table, variable);
+    connect(call, &LoadDataCall::complete, dataBroker, [dataBroker, catalog, runUid, table, variable](vtkSmartPointer<vtkImageData> imageData) {
+      auto dataSource = new DataSource(imageData);
+      dataSource->setLabel(QString("db://%1/%2/%3/%4").arg(catalog).arg(runUid).arg(table).arg(variable));
+      LoadDataReaction::dataSourceAdded(dataSource, true, false);
+      dataBroker->deleteLater();
+      tomviz::mainWidget()->unsetCursor();
+    });
+
+    connect(call, &DataBrokerCall::error, dataBroker, [dataBroker] (const QString& errorMessage) {
+      tomviz::mainWidget()->unsetCursor();
+      dataBroker->deleteLater();
+      QMessageBox messageBox(QMessageBox::Warning, "tomviz",
+                              QString("Error loading DataBroker dataset: %1. Please check message log for details.").arg(errorMessage),
+                              QMessageBox::Ok);
+      messageBox.exec();
+    });
+  }
 }
 
 }

@@ -9,6 +9,7 @@
 
 #include <QTreeWidget>
 #include <QDebug>
+#include <QPushButton>
 
 namespace tomviz {
 
@@ -18,25 +19,33 @@ DataBrokerLoadDialog::DataBrokerLoadDialog(DataBroker* dataBroker, QWidget* pare
   m_ui->setupUi(this);
   m_ui->treeWidget->setExpandsOnDoubleClick(false);
 
+  auto resetButton = m_ui->buttonBox->button(QDialogButtonBox::Reset);
+  connect(resetButton, &QPushButton::clicked, this, [this](){
+    setEnabledOkButton(false);
+    clearErrorMessage();
+    this->loadCatalogs();
+  });
+
+  setEnabledOkButton(false);
+
   loadCatalogs();
 }
 
-
-
 DataBrokerLoadDialog::~DataBrokerLoadDialog() = default;
 
-
 void DataBrokerLoadDialog::loadCatalogs() {
-  setCursor(Qt::WaitCursor);
+  beginCall();
 
   auto call = m_dataBroker->catalogs();
   connect(call, &ListResourceCall::complete, call, [this, call](QList<QVariantMap> catalogs) {
     this->m_catalogs = catalogs;
     this->showCatalogs();
-    this->unsetCursor();
+    this->setLabel("Please select a catalog");
+    this->endCall();
     call->deleteLater();
-
   });
+
+  connectErrorSignal(call);
 }
 
 void DataBrokerLoadDialog::showCatalogs() {
@@ -64,19 +73,21 @@ void DataBrokerLoadDialog::showCatalogs() {
       items.append(new QTreeWidgetItem(tree, row));
   }
   tree->insertTopLevelItems(0, items);
-  std::cout << "done\n";
 }
 
 void DataBrokerLoadDialog::loadRuns(const QString& catalog) {
-  setCursor(Qt::WaitCursor);
+  beginCall();
 
   auto call = m_dataBroker->runs(catalog);
   connect(call, &ListResourceCall::complete, call, [this, call](QList<QVariantMap> runs) {
     this->m_runs = runs;
     this->showRuns();
-    this->unsetCursor();
+    this->setLabel("Please select a run");
+    this->endCall();
     call->deleteLater();
   });
+
+  connectErrorSignal(call);
 }
 
 void DataBrokerLoadDialog::showRuns() {
@@ -106,19 +117,21 @@ void DataBrokerLoadDialog::showRuns() {
       items.append(new QTreeWidgetItem(tree, row));
   }
   tree->insertTopLevelItems(0, items);
-  std::cout << "done\n";
 }
 
 void DataBrokerLoadDialog::loadTables(const QString& catalog, const QString& runUid) {
-  setCursor(Qt::WaitCursor);
+  beginCall();
 
   auto call = m_dataBroker->tables(catalog, runUid);
   connect(call, &ListResourceCall::complete, call, [this, call](QList<QVariantMap> tables) {
     this->m_tables = tables;
     this->showTables();
-    this->unsetCursor();
+    this->setLabel("Please select a table");
+    this->endCall();
     call->deleteLater();
   });
+
+  connectErrorSignal(call);
 }
 
 void DataBrokerLoadDialog::showTables() {
@@ -148,15 +161,18 @@ void DataBrokerLoadDialog::showTables() {
 }
 
 void DataBrokerLoadDialog::loadVariables(const QString& catalog, const QString& runUid, const QString& table) {
-  setCursor(Qt::WaitCursor);
+  beginCall();
 
   auto call = m_dataBroker->variables(catalog, runUid, table);
   connect(call, &ListResourceCall::complete, call, [this, call](QList<QVariantMap> variables) {
     this->m_variables = variables;
     this->showVariables();
-    this->unsetCursor();
+    this->setLabel("Please select a variable");
+    this->endCall();
     call->deleteLater();
   });
+
+  connectErrorSignal(call);
 }
 
 void DataBrokerLoadDialog::showVariables() {
@@ -166,6 +182,7 @@ void DataBrokerLoadDialog::showVariables() {
 
   connect(tree, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item, int column) {
     m_selectedVariable = item->data(0, Qt::DisplayRole).toString();
+    setEnabledOkButton(true);
   });
 
   tree->setColumnCount(1);
@@ -183,5 +200,72 @@ void DataBrokerLoadDialog::showVariables() {
   tree->insertTopLevelItems(0, items);
 }
 
+void DataBrokerLoadDialog::setLabel(const QString& label) {
+  this->m_ui->label->setText(label);
+}
+
+void DataBrokerLoadDialog::setEnabledResetButton(bool enabled){
+  auto resetButton = m_ui->buttonBox->button(QDialogButtonBox::Reset);
+  resetButton->setEnabled(enabled);
+}
+
+void DataBrokerLoadDialog::setEnabledOkButton(bool enabled){
+  auto okButton = m_ui->buttonBox->button(QDialogButtonBox::Ok);
+  okButton->setEnabled(enabled);
+}
+
+void DataBrokerLoadDialog::beginCall()
+{
+  setEnabledResetButton(false);
+  setCursor(Qt::WaitCursor);
+  m_ui->treeWidget->setEnabled(false);
+  clearErrorMessage();
+}
+
+void DataBrokerLoadDialog::endCall()
+{
+  setEnabledResetButton(true);
+  unsetCursor();
+  m_ui->treeWidget->setEnabled(true);
+}
+
+void DataBrokerLoadDialog::setErrorMessage(const QString& errorMessage)
+{
+  m_ui->errorLabel->setText(QString("%1. See message log for details.").arg(errorMessage));
+}
+
+void DataBrokerLoadDialog::clearErrorMessage()
+{
+  m_ui->errorLabel->setText("");
+}
+
+void DataBrokerLoadDialog::connectErrorSignal(ListResourceCall *call)
+{
+  connect(call, &DataBrokerCall::error, call, [this, call](const QString& errorMessage) {
+      this->setErrorMessage(errorMessage);
+      this->endCall();
+      call->deleteLater();
+    });
+}
+
+QString DataBrokerLoadDialog::selectedCatalog()
+{
+  return m_selectedCatalog;
+}
+
+QString DataBrokerLoadDialog::selectedRunUid()
+{
+  return m_selectedRunUid;
+}
+
+QString DataBrokerLoadDialog::selectedTable()
+{
+  return m_selectedTable;
+}
+
+QString DataBrokerLoadDialog::selectedVariable()
+{
+  return m_selectedVariable;
+}
 
 } // namespace tomviz
